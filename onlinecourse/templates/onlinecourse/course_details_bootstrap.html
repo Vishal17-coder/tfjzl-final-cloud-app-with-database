@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.name }} - Course Details</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .hero-banner {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.15);
+        }
+        .lesson-card {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .lesson-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .question-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            border-radius: 0.375rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .form-check-label {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'onlinecourse:index' %}">
+            <i class="bi bi-mortarboard-fill me-2"></i>Online Course Hub
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'onlinecourse:index' %}">Home</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <span class="navbar-text me-3 text-light">
+                        <i class="bi bi-person-circle me-1"></i>Welcome, <strong>{{ user.username }}</strong>
+                    </span>
+                    <a class="btn btn-outline-light btn-sm" href="{% url 'onlinecourse:logout' %}">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </a>
+                {% else %}
+                    <a class="btn btn-outline-light btn-sm me-2" href="{% url 'onlinecourse:login' %}">Login</a>
+                    <a class="btn btn-primary btn-sm" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <!-- Course Header / Hero Section -->
+    <div class="hero-banner mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-light text-primary mb-2 px-3 py-2 fs-6">Course Overview</span>
+                <h1 class="display-5 fw-bold mb-3">{{ course.name }}</h1>
+                <p class="lead mb-3">{{ course.description }}</p>
+                <div class="d-flex flex-wrap gap-3 align-items-center text-white-50">
+                    <span><i class="bi bi-calendar3 me-1"></i> Published: {{ course.pub_date|default:"Ongoing" }}</span>
+                    <span><i class="bi bi-people me-1"></i> Enrolled: {{ course.total_enrollment }}</span>
+                    <span><i class="bi bi-book me-1"></i> Lessons: {{ course.lesson_set.count }}</span>
+                </div>
+            </div>
+            {% if course.image %}
+            <div class="col-lg-4 text-center mt-3 mt-lg-0">
+                <img src="{{ course.image.url }}" alt="{{ course.name }}" class="img-fluid rounded shadow-sm border border-2 border-white" style="max-height: 220px; object-fit: cover;">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Course Content -->
+    <div class="row">
+        <!-- Lessons & Quiz Section -->
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold mb-0 text-secondary">
+                    <i class="bi bi-journal-text me-2 text-primary"></i>Course Lessons & Exam
+                </h3>
+                {% if not is_enrolled and user.is_authenticated %}
+                <form action="{% url 'onlinecourse:enroll' course.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i>Enroll in this Course
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- Exam Submission Form -->
+            <form id="exam_form" action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                {% csrf_token %}
+
+                <!-- Accordion / List of Lessons -->
+                <div class="accordion mb-4 shadow-sm" id="lessonsAccordion">
+                    {% for lesson in course.lesson_set.all %}
+                    <div class="accordion-item lesson-card mb-3 border">
+                        <h2 class="accordion-header" id="heading{{ lesson.id }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-semibold fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ lesson.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ lesson.id }}">
+                                <span class="badge bg-primary me-2">Lesson {{ forloop.counter }}</span>
+                                {{ lesson.title }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ lesson.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ lesson.id }}" data-bs-parent="#lessonsAccordion">
+                            <div class="accordion-body p-4 bg-white">
+                                <!-- Lesson Content -->
+                                <div class="lesson-content mb-4 text-muted">
+                                    <p class="fs-6" style="white-space: pre-line;">{{ lesson.content }}</p>
+                                </div>
+
+                                <!-- Questions associated with this Lesson -->
+                                {% if lesson.question_set.all %}
+                                <hr class="my-4">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="bi bi-question-circle-fill text-primary me-2"></i>Lesson Quiz / Questions
+                                </h5>
+
+                                {% for question in lesson.question_set.all %}
+                                <div class="question-box">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            Q{{ forloop.counter }}. {{ question.question_text }}
+                                        </h6>
+                                        <span class="badge bg-secondary">Points: {{ question.grade }}</span>
+                                    </div>
+
+                                    <!-- Choices for this Question -->
+                                    <div class="ps-2 mt-3">
+                                        {% for choice in question.choice_set.all %}
+                                        <div class="form-check my-2">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   name="choice_{{ choice.id }}" 
+                                                   id="choice_{{ choice.id }}" 
+                                                   value="{{ choice.id }}">
+                                            <label class="form-check-label text-dark" for="choice_{{ choice.id }}">
+                                                {{ choice.choice_text }}
+                                            </label>
+                                        </div>
+                                        {% empty %}
+                                        <p class="text-muted small fst-italic">No choices available for this question.</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                {% else %}
+                                <div class="alert alert-light border small text-muted mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>No quiz questions for this lesson.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info py-4 text-center">
+                        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+                        No lessons have been published for this course yet. Please check back soon!
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
+                {% if user.is_authenticated %}
+                <div class="d-grid gap-2 col-md-6 mx-auto my-4">
+                    <button class="btn btn-primary btn-lg shadow" type="submit">
+                        <i class="bi bi-check2-circle me-2"></i>Submit Exam Answers
+                    </button>
+                </div>
+                {% else %}
+                <div class="alert alert-warning text-center shadow-sm">
+                    <i class="bi bi-lock-fill me-2"></i>Please <a href="{% url 'onlinecourse:login' %}" class="alert-link">log in</a> or <a href="{% url 'onlinecourse:registration' %}" class="alert-link">register</a> to take this course's exam and submit your answers.
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
