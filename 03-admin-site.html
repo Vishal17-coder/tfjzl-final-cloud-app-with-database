@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site administration | Django site admin</title>
+    <style>
+        /* Standalone Replica of Django Admin CSS */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #fdfdfd;
+            color: #333333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        a {
+            color: #447e9b;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #036;
+        }
+        /* Header */
+        #header {
+            background: #417690;
+            color: #ffffff;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #366379;
+        }
+        #branding h1 {
+            font-size: 20px;
+            font-weight: 300;
+            margin: 0;
+            color: #f5dd5d;
+            letter-spacing: 0.5px;
+        }
+        #branding h1 a {
+            color: #f5dd5d;
+        }
+        #user-tools {
+            font-size: 12px;
+            text-align: right;
+            font-weight: 500;
+            color: #e0f0f8;
+        }
+        #user-tools a {
+            color: #ffffff;
+            margin-left: 8px;
+            text-transform: uppercase;
+            font-size: 11px;
+            border-bottom: 1px dotted #ffffff;
+        }
+        #user-tools a:hover {
+            color: #f5dd5d;
+            border-bottom-color: #f5dd5d;
+        }
+        /* Breadcrumbs */
+        .breadcrumbs {
+            background: #79aec8;
+            padding: 10px 24px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 400;
+        }
+        .breadcrumbs a {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        /* Main Layout */
+        .main-container {
+            max-width: 1300px;
+            margin: 24px auto;
+            padding: 0 24px;
+            display: flex;
+            gap: 28px;
+        }
+        #content-main {
+            flex: 1;
+            min-width: 0;
+        }
+        #content-related {
+            width: 320px;
+            flex-shrink: 0;
+        }
+        /* Modules / App Sections */
+        .app-module {
+            background: #ffffff;
+            border: 1px solid #e1e7ec;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .app-module-header {
+            background: #417690;
+            color: #ffffff;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .app-module-header a {
+            color: #ffffff;
+        }
+        .model-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .model-table tr {
+            border-bottom: 1px solid #eef2f5;
+        }
+        .model-table tr:last-child {
+            border-bottom: none;
+        }
+        .model-table tr:hover {
+            background: #f7fafc;
+        }
+        .model-table td, .model-table th {
+            padding: 11px 16px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .model-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .model-name a {
+            color: #333333;
+        }
+        .model-name a:hover {
+            color: #447e9b;
+        }
+        .model-actions {
+            text-align: right;
+            white-space: nowrap;
+            width: 160px;
+        }
+        .addlink {
+            padding: 3px 10px;
+            background: #28a745;
+            color: #ffffff !important;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+            display: inline-block;
+        }
+        .addlink:hover {
+            background: #218838;
+        }
+        .changelink {
+            padding: 3px 10px;
+            background: #f0f4f7;
+            color: #447e9b !important;
+            border: 1px solid #ccd8e2;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .changelink:hover {
+            background: #e2ecf2;
+        }
+        /* Sidebar (Recent Actions) */
+        .sidebar-module {
+            background: #ffffff;
+            border: 1px solid #e1e7ec;
+            border-radius: 4px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .sidebar-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            letter-spacing: 0.5px;
+        }
+        .action-list {
+            list-style: none;
+        }
+        .action-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f2f2f2;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .action-list li:last-child {
+            border-bottom: none;
+        }
+        .action-tag-add {
+            color: #28a745;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            margin-right: 4px;
+        }
+        .action-tag-change {
+            color: #ff9800;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            margin-right: 4px;
+        }
+        .action-object {
+            font-weight: 600;
+            color: #333;
+        }
+        .action-meta {
+            color: #888;
+            font-size: 11px;
+            display: block;
+            margin-top: 2px;
+        }
+        /* Footer */
+        #footer {
+            text-align: center;
+            padding: 20px 0;
+            color: #999;
+            font-size: 11px;
+            border-top: 1px solid #eaeaea;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Django Admin Header -->
+    <header id="header">
+        <div id="branding">
+            <h1 id="site-name"><a href="#">Django administration</a></h1>
+        </div>
+        <div id="user-tools">
+            WELCOME, <strong>ADMIN</strong>. 
+            <a href="#">VIEW SITE</a> / 
+            <a href="#">CHANGE PASSWORD</a> / 
+            <a href="#">LOG OUT</a>
+        </div>
+    </header>
+
+    <!-- Breadcrumbs Bar -->
+    <nav class="breadcrumbs" aria-label="Breadcrumbs">
+        <a href="#">Home</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Main Content Area -->
+        <main id="content-main">
+
+            <!-- Authentication and Authorization Section -->
+            <div class="app-module">
+                <div class="app-module-header">
+                    <a href="#">Authentication and Authorization</a>
+                </div>
+                <table class="model-table">
+                    <tbody>
+                        <tr>
+                            <td class="model-name"><a href="#">Groups</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Users</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Onlinecourse App Section -->
+            <div class="app-module">
+                <div class="app-module-header">
+                    <a href="#">OnlineCourse</a>
+                </div>
+                <table class="model-table">
+                    <tbody>
+                        <tr>
+                            <td class="model-name"><a href="#">Courses</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Lessons</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Instructors</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Learners</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Questions</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Choices</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="model-name"><a href="#">Submissions</a></td>
+                            <td class="model-actions">
+                                <a href="#" class="addlink">+ Add</a>
+                                <a href="#" class="changelink">Change</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+        <!-- Right Sidebar / Recent Actions -->
+        <aside id="content-related">
+            <div class="sidebar-module">
+                <h2 class="sidebar-title">Recent actions</h2>
+                <h3 style="font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 8px;">My actions</h3>
+                <ul class="action-list">
+                    <li>
+                        <span class="action-tag-add">Added</span>
+                        <span class="action-object">Question: What is a Foreign Key in Django?</span>
+                        <span class="action-meta">Question (Lesson: Django Models)</span>
+                    </li>
+                    <li>
+                        <span class="action-tag-add">Added</span>
+                        <span class="action-object">Course: Introduction to Cloud Development</span>
+                        <span class="action-meta">Course</span>
+                    </li>
+                    <li>
+                        <span class="action-tag-change">Changed</span>
+                        <span class="action-object">Lesson: Building Web Apps with Django</span>
+                        <span class="action-meta">Lesson</span>
+                    </li>
+                    <li>
+                        <span class="action-tag-add">Added</span>
+                        <span class="action-object">Instructor: Vishal</span>
+                        <span class="action-meta">Instructor</span>
+                    </li>
+                    <li>
+                        <span class="action-tag-add">Added</span>
+                        <span class="action-object">Choice: models.ForeignKey (True)</span>
+                        <span class="action-meta">Choice</span>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Django Admin Footer -->
+    <footer id="footer">
+        Django administration &mdash; Django 4.2.16
+    </footer>
+
+</body>
+</html>
